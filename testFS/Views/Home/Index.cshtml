@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "MyDots";
+}
+@model IEnumerable<Domain.Entities.MyDot>;
+@using testFS.Supports;
+
+
+<script src="https://unpkg.com/konva@9/konva.min.js"></script>
+@* <script src="~/js/TSModels/MyDot.ts" asp-append-version="true"></script> *@
+<script type="module">
+    import { MyComment } from '/js/classes/MyComment.js'
+    import { MyDot } from '/js/classes/MyDot.js'
+    function htmlDecode(input) {
+        try {
+            const doc = new DOMParser().parseFromString(input, 'text/html');
+            return doc.documentElement.textContent;
+        } catch (error) {
+            return input;
+        }
+    };
+    var data =
+        [
+            @foreach (var dot in Model)
+            {
+                <text>
+                new MyDot(@dot.ID, @dot.Cord_x, @dot.Cord_y, '@ColorConverter.ARGBtoHEX(dot.ARGBColor)', @dot.Radius,
+                [
+                @foreach (var comment in dot.Comments)
+                {
+                    <text>
+                            new MyComment(@comment.ID, htmlDecode('@comment.Text'), '@ColorConverter.ARGBtoHEX(comment.intcolor)'),
+                    </text>
+                }
+                ]),
+                </text>
+            }
+        ];
+    console.log(data)
+    var stage = new Konva.Stage({
+        container: 'container',// id of container <div>
+        width: window.innerWidth - 50,
+        height: window.innerHeight - 50,
+    });
+    var layer = new Konva.Layer();
+    stage.add(layer);
+
+    stage.on('dblclick', function(e) {
+        //console.log(e);
+        let nid = data[data.length - 1].id+1;
+        let x = e.evt.layerX;
+        let y = e.evt.layerY;
+        let newdot = new MyDot(nid, x, y, '#000000', 10, []);
+        data[data.length] = newdot;
+        newdot.DrawDotAndComments(layer, data);
+        layer.draw();
+    })
+
+    data.forEach(dot => dot.DrawDotAndComments(layer,data));
+    layer.draw();
+
+
+
+</script>
+
+<div id="container" style="position: relative"></div>
+<div claas="demotest">
+    <table>
+        @foreach (var dot in Model)
+        {
+            @foreach (var comment in dot.Comments)
+            {                
+                <tr>
+                    <td>@comment.intcolor</td>                    
+                </tr>
+            }
+        }
+    </table> 
+</div>
